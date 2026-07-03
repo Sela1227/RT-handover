@@ -84,7 +84,7 @@
     letter-spacing:3px;
     margin-top:2px;
   }
-  .toolbar{display:flex;gap:8px;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
   .toolbar button{
     font-family:inherit;
     font-size:13px;
@@ -112,6 +112,19 @@
     padding:8px 12px;
   }
   .meta label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px;}
+  input.date-input{
+    font:inherit;
+    width:96px;
+    border:none;
+    border-bottom:1px dashed var(--secondary);
+    background:var(--fill);
+    color:var(--text);
+    text-align:center;
+    border-radius:2px;
+    padding:1px 2px;
+  }
+  input.date-input:focus{outline:none;background:#fff;border-bottom:1px solid var(--primary);}
+  input.date-input::placeholder{color:#B7BCA6;}
   [contenteditable]{
     outline:none;
     background:var(--fill);
@@ -257,6 +270,7 @@
   .notes .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px;}
   .notes .field label::before{content:"▸ ";color:var(--primary);}
   .notes .field div[contenteditable]{min-height:2.6em;font-size:13.5px;}
+  .se-row{display:flex;gap:8px;align-items:center;}
   .notes .field .se-extra[contenteditable]{min-height:1.6em;margin-top:6px;}
   .notes .field.wide{grid-column:1 / -1;}
 
@@ -294,7 +308,7 @@
     .toolbar,.add-row,.del-btn,#empty-hint{display:none;}
     .card{border-color:#bbb;margin-bottom:10px;}
     [contenteditable]{background:transparent;border-bottom:1px dashed #999;}
-    .rt-grid input.num{border:none;background:transparent;}
+    .rt-grid input.num,input.date-input{border:none;background:transparent;}
     select{border:none;background:transparent;appearance:none;}
     header{margin-bottom:12px;}
   }
@@ -308,19 +322,24 @@
 <div class="sheet">
 
   <header>
-    <h1>彰濱秀傳放射腫瘤科 病人交班單<span class="ver" id="appVersion">V0.3.0</span>
+    <h1>彰濱秀傳放射腫瘤科 病人交班單<span class="ver" id="appVersion">V0.4.0</span>
       <small>RADIATION ONCOLOGY HANDOVER</small>
     </h1>
     <div class="toolbar">
+      <button class="ghost" onclick="document.getElementById('jsonFile').click()">📥 匯入 JSON</button>
       <button class="ghost" onclick="window.print()">🖨 列印</button>
       <button id="saveBtn" onclick="saveLocked()">🔒 另存已填寫版本（鎖定）</button>
+      <input type="file" id="jsonFile" accept=".json,application/json" style="display:none">
     </div>
   </header>
 
   <div class="meta">
     <div class="cell"><label>交班醫師</label><div contenteditable data-hint="填寫姓名">林伯儒 醫師</div></div>
     <div class="cell"><label>代理醫師</label><div contenteditable data-hint="填寫姓名">劉育昌 醫師</div></div>
-    <div class="cell"><label>交班期間</label><div contenteditable data-hint="115/07/__ ～ 115/07/__"></div></div>
+    <div class="cell"><label>交班期間（西元，可直接輸入 20260101）</label>
+      <input class="date-input" data-field="起" placeholder="2026/01/01"> ～
+      <input class="date-input" data-field="迄" placeholder="2026/01/31">
+    </div>
   </div>
 
   <div class="summary">
@@ -330,7 +349,7 @@
     <span style="color:var(--muted);">所有資料只存在您的瀏覽器與另存的檔案中，不會上傳</span>
   </div>
 
-  <div id="empty-hint">尚無病人 — 點下方「＋ 新增病人」建立第一筆交班資料</div>
+  <div id="empty-hint">尚無病人 — 點「＋ 新增病人」建立第一筆，或用「📥 匯入 JSON」批次帶入</div>
   <div id="patients"></div>
 
   <div class="add-row"><button onclick="addPatient()">＋ 新增病人</button></div>
@@ -338,19 +357,20 @@
   <footer>
     <div class="sela-credit">
       <img src="favicon/sela.svg" alt="SELA">
-      <span>Made by SELA · <span id="creditVersion">V0.3.0</span></span>
+      <span>Made by SELA · <span id="creditVersion">V0.4.0</span></span>
     </div>
   </footer>
 
 </div>
 
 <script>
-const VERSION = "V0.3.0";
+const VERSION = "V0.4.0";
 document.getElementById("appVersion").textContent = VERSION;
 document.getElementById("creditVersion").textContent = VERSION;
 
 const CANCER_TYPES = ["頭頸癌","鼻咽癌","口腔癌","食道癌","肺癌","乳癌","肝癌","胃癌","胰臟癌","大腸直腸癌","攝護腺癌","子宮頸癌","子宮內膜癌","卵巢癌","膀胱癌","腦瘤","淋巴癌","皮膚癌","骨轉移","腦轉移","其他"];
-const SIDE_EFFECTS = ["無明顯副作用","放射性皮膚炎 Gr.1","放射性皮膚炎 Gr.2","放射性皮膚炎 Gr.3","口腔黏膜炎 Gr.1","口腔黏膜炎 Gr.2","口腔黏膜炎 Gr.3","吞嚥疼痛／困難","噁心嘔吐","腹瀉","放射性膀胱炎","放射性直腸炎","疲倦","體重下降","骨髓抑制","其他（補充說明）"];
+const SE_ITEMS = ["無明顯副作用","放射性皮膚炎","口腔黏膜炎","放射性食道炎","吞嚥疼痛／困難","噁心嘔吐","腹瀉","放射性膀胱炎","放射性直腸炎","放射性肺炎","疲倦","體重下降","骨髓抑制","其他"];
+const SE_GRADES = ["Gr.1","Gr.2","Gr.3","Gr.4"];
 
 const wrap = document.getElementById("patients");
 
@@ -377,14 +397,17 @@ function makeCard(){
       <div class="v remain" data-role="remain">—</div>
     </div>
     <div class="notes">
-      <div class="field"><label>診斷／照射部位</label><div contenteditable data-hint="例：cT3N1M0，PTV 含雙側頸部"></div></div>
+      <div class="field"><label>診斷／照射部位</label><div class="dx" contenteditable data-hint="例：cT3N1M0，PTV 含雙側頸部"></div></div>
       <div class="field">
         <label>目前副作用</label>
-        <select class="se">${opts(SIDE_EFFECTS,"選擇副作用")}</select>
+        <div class="se-row">
+          <select class="se-item">${opts(SE_ITEMS,"項目")}</select>
+          <select class="se-grade">${opts(SE_GRADES,"分級")}</select>
+        </div>
         <div class="se-extra" contenteditable data-hint="補充說明（手寫）"></div>
       </div>
-      <div class="field"><label>注意事項</label><div contenteditable data-hint="例：體重監控中、每週抽血、影像追蹤"></div></div>
-      <div class="field wide"><label>其他備註</label><div contenteditable data-hint=""></div></div>
+      <div class="field"><label>注意事項</label><div class="care" contenteditable data-hint="例：體重監控中、每週抽血、影像追蹤"></div></div>
+      <div class="field wide"><label>其他備註</label><div class="memo" contenteditable data-hint=""></div></div>
     </div>`;
   return card;
 }
@@ -425,17 +448,44 @@ function addPatient(){
   renumber();
   card.scrollIntoView?.({behavior:"smooth", block:"center"});
   card.querySelector(".name").focus();
+  return card;
 }
 
-// 事件委派
+// select 選擇寫回 selected 屬性（坑 P3，clone / 序列化用）
+function syncSelect(sel){
+  [...sel.options].forEach(o => o.toggleAttribute("selected", o.value === sel.value));
+}
+// select 設值：清單外的值動態補一個 option，匯入不失真
+function setSelect(sel, val){
+  if (val == null || val === "") { sel.value = ""; syncSelect(sel); return; }
+  if (![...sel.options].some(o => o.value === String(val))) {
+    const o = document.createElement("option");
+    o.value = o.textContent = String(val);
+    sel.appendChild(o);
+  }
+  sel.value = String(val);
+  syncSelect(sel);
+}
+
+// ── 日期遮罩：輸入 20260101 → 顯示 2026/01/01（西元） ──
+function fmtDate(v){
+  const d = String(v ?? "").replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 4) return d;
+  if (d.length <= 6) return d.slice(0,4) + "/" + d.slice(4);
+  return d.slice(0,4) + "/" + d.slice(4,6) + "/" + d.slice(6);
+}
+document.addEventListener("input", e => {
+  if (e.target.classList?.contains("date-input")) {
+    e.target.value = fmtDate(e.target.value);
+  }
+});
+
+// 事件委派（卡片區）
 wrap.addEventListener("input", e => {
   if (e.target.classList.contains("num")) recalc(e.target.closest(".card"));
 });
 wrap.addEventListener("change", e => {
-  // 所有 select 的選擇即時寫回 selected 屬性（坑 P3，序列化用）
-  if (e.target.tagName === "SELECT") {
-    [...e.target.options].forEach(o => o.toggleAttribute("selected", o.value === e.target.value));
-  }
+  if (e.target.tagName === "SELECT") syncSelect(e.target);
 });
 wrap.addEventListener("click", e => {
   if (e.target.dataset.action === "del") {
@@ -450,20 +500,76 @@ wrap.addEventListener("click", e => {
 
 renumber();
 
+// ── JSON 匯入（格式見 JSON-FORMAT.md） ──
+function importFromObject(data){
+  if (typeof data !== "object" || data === null) throw new Error("最外層必須是 JSON 物件");
+  const list = data["病人"];
+  if (!Array.isArray(list)) throw new Error("缺少「病人」欄位，或它不是陣列");
+
+  // 交班資訊（皆選填）
+  const metaDivs = document.querySelectorAll(".meta .cell div[contenteditable]");
+  if (data["交班醫師"]) metaDivs[0].textContent = data["交班醫師"];
+  if (data["代理醫師"]) metaDivs[1].textContent = data["代理醫師"];
+  const period = data["交班期間"] || {};
+  const dates = document.querySelectorAll(".date-input");
+  if (period["起"]) dates[0].value = fmtDate(period["起"]);
+  if (period["迄"]) dates[1].value = fmtDate(period["迄"]);
+
+  // 既有名單處理：確定＝清空後匯入；取消＝附加在後
+  const existing = wrap.querySelectorAll(".card").length;
+  if (existing > 0) {
+    if (confirm(`目前已有 ${existing} 位病人。\n按「確定」清空後匯入，按「取消」附加在現有名單後。`)) {
+      wrap.innerHTML = "";
+    }
+  }
+
+  const num = v => (v === undefined || v === null || v === "") ? "" : String(parseInt(v, 10));
+  list.forEach(p => {
+    const card = makeCard();
+    wrap.appendChild(card);
+    card.querySelector(".name").textContent = p["姓名"] || "";
+    card.querySelector(".mrn").textContent  = p["病歷號碼"] || "";
+    setSelect(card.querySelector(".cancer"),   p["癌別"]);
+    card.querySelector('[data-role="total"]').value = num(p["預定次數"]);
+    card.querySelector('[data-role="dose"]').value  = num(p["單次劑量"]);
+    card.querySelector('[data-role="done"]').value  = num(p["已完成次數"]);
+    card.querySelector(".dx").textContent   = p["診斷部位"] || "";
+    setSelect(card.querySelector(".se-item"),  p["副作用項目"]);
+    setSelect(card.querySelector(".se-grade"), p["副作用分級"]);
+    card.querySelector(".se-extra").textContent = p["副作用補充"] || "";
+    card.querySelector(".care").textContent = p["注意事項"] || "";
+    card.querySelector(".memo").textContent = p["其他備註"] || "";
+    recalc(card);
+  });
+  renumber();
+  return list.length;
+}
+
+document.getElementById("jsonFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const n = importFromObject(JSON.parse(reader.result));
+      alert(`匯入完成：${n} 位病人。`);
+    } catch (err) {
+      alert("匯入失敗：" + err.message + "\n請對照 JSON-FORMAT.md 檢查格式。");
+    }
+    e.target.value = ""; // 允許重選同一檔
+  };
+  reader.readAsText(file, "utf-8");
+});
+
 // ── 另存鎖定版：產生「唯讀、無 script」的靜態 HTML ──
-// 做法：先把即時值寫回 attribute（坑 P2/P3）→ clone 整份文件 → 在 clone 上
-// 把所有可編輯元素轉為純文字、拔掉互動按鈕與 script，輸出自包含檔案。
 function saveLocked(){
-  // 1. 即時值 → attribute（clone 不會帶 property）
-  document.querySelectorAll("input.num").forEach(el => el.setAttribute("value", el.value));
-  document.querySelectorAll("select").forEach(sel =>
-    [...sel.options].forEach(o => o.toggleAttribute("selected", o.value === sel.value))
-  );
+  // 1. 即時值 → attribute（clone 不會帶 property；坑 P2/P3）
+  document.querySelectorAll("input").forEach(el => el.setAttribute("value", el.value));
+  document.querySelectorAll("select").forEach(syncSelect);
 
   // 2. clone 並轉換為唯讀
   const root = document.documentElement.cloneNode(true);
 
-  // contenteditable → 純文字
   root.querySelectorAll("[contenteditable]").forEach(el => {
     el.removeAttribute("contenteditable");
     el.removeAttribute("data-hint");
@@ -472,14 +578,13 @@ function saveLocked(){
     el.style.borderBottom = "1px solid #E3E6DC";
   });
 
-  // input → 純文字
-  root.querySelectorAll("input.num").forEach(el => {
+  root.querySelectorAll("input.num, input.date-input").forEach(el => {
     const span = root.ownerDocument.createElement("span");
     span.textContent = el.getAttribute("value") || "—";
+    if (el.classList.contains("date-input")) span.style.padding = "0 4px";
     el.replaceWith(span);
   });
 
-  // select → 標籤文字
   root.querySelectorAll("select").forEach(sel => {
     const chosen = [...sel.options].find(o => o.hasAttribute("selected") && o.value);
     const span = root.ownerDocument.createElement("span");
@@ -488,10 +593,14 @@ function saveLocked(){
     sel.replaceWith(span);
   });
 
-  // 拔掉互動元素與 script
-  root.querySelectorAll(".add-row, .del-btn, #saveBtn, #empty-hint, script").forEach(el => el.remove());
+  // 拔掉互動元素與 script（含隱藏的檔案 input）
+  root.querySelectorAll(".add-row, .del-btn, #saveBtn, #empty-hint, #jsonFile, script").forEach(el => el.remove());
+  // 工具列只留列印
+  root.querySelectorAll(".toolbar button").forEach(b => {
+    if (!b.getAttribute("onclick")?.includes("print")) b.remove();
+  });
 
-  // 標記鎖定版（標題列 + 頁籤標題）
+  // 標記鎖定版
   const h1 = root.querySelector("header h1");
   const tag = root.ownerDocument.createElement("span");
   tag.className = "lock-tag";
@@ -499,8 +608,7 @@ function saveLocked(){
   h1.insertBefore(tag, h1.querySelector("small"));
   root.querySelector("title").textContent += "（鎖定版）";
 
-  // favicon 為外部相對路徑，鎖定版單檔寄送時無法載入 → 移除連結避免破圖，
-  // 微標 img 改為隱藏（單檔自包含原則）
+  // 自包含（坑 P4）：移除外部資源引用
   root.querySelectorAll('link[rel="icon"],link[rel="apple-touch-icon"],link[rel="manifest"]').forEach(el=>el.remove());
   const credit = root.querySelector(".sela-credit img");
   if (credit) credit.remove();

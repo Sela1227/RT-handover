@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>彰濱秀傳放射腫瘤科 病人交班單</title>
+
+<!-- SELA Favicon Set -->
+<link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+<link rel="manifest" href="favicon/site.webmanifest">
+<meta name="theme-color" content="#71805A">
+
+<style>
+  :root{
+    /* SELA 品牌色（僅 logo / 歸屬微標用） */
+    --sela-orange:#F36825;
+    --sela-white:#FFFFFF;
+    /* 主題：北歐橄欖綠（霧面低飽和） */
+    --primary:#71805A;
+    --primary-hover:#5E6C4A;
+    --secondary:#A8B494;
+    --muted:#939C82;
+    --bg:#FAFBF8;
+    --text:#4E5843;
+    --text-light:#5E684F;
+    --bg-card:#EFF2E9;
+    --border:#DEE3D2;
+    --fill:#F5F7EF;
+    --warn-bg:#F2ECDA;
+    --warn-ink:#8F7434;
+    --ok-bg:#E7EDDC;
+    --ok-ink:#5E6C4A;
+    --danger:#9A8585;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:system-ui,-apple-system,"Microsoft JhengHei","PingFang TC","Noto Sans CJK TC","Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+    line-height:1.55;
+    padding:24px;
+  }
+  .sheet{max-width:1000px;margin:0 auto;}
+
+  /* ── 頁首 ── */
+  header{
+    border-left:6px solid var(--primary);
+    padding:4px 0 4px 16px;
+    margin-bottom:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  header h1{font-size:21px;letter-spacing:1.5px;color:var(--text);}
+  header h1 .ver{
+    font-size:12px;
+    font-weight:normal;
+    color:var(--muted);
+    margin-left:8px;
+    letter-spacing:0;
+  }
+  header h1 .lock-tag{
+    font-size:12px;
+    font-weight:normal;
+    color:var(--warn-ink);
+    background:var(--warn-bg);
+    border-radius:99px;
+    padding:2px 10px;
+    margin-left:8px;
+    letter-spacing:1px;
+    vertical-align:2px;
+  }
+  header h1 small{
+    display:block;
+    font-size:11.5px;
+    font-weight:normal;
+    color:var(--primary);
+    letter-spacing:3px;
+    margin-top:2px;
+  }
+  .toolbar{display:flex;gap:8px;}
+  .toolbar button{
+    font-family:inherit;
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:6px;
+    border:1px solid var(--primary);
+    background:var(--primary);
+    color:#fff;
+    cursor:pointer;
+  }
+  .toolbar button.ghost{background:#fff;color:var(--primary);}
+  .toolbar button:hover{background:var(--primary-hover);border-color:var(--primary-hover);color:#fff;}
+
+  /* ── 交班資訊列 ── */
+  .meta{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .meta .cell{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 12px;
+  }
+  .meta label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px;}
+  [contenteditable]{
+    outline:none;
+    background:var(--fill);
+    border-bottom:1px dashed var(--secondary);
+    min-height:1.4em;
+    border-radius:2px;
+    padding:1px 4px;
+  }
+  [contenteditable]:focus{background:#fff;border-bottom:1px solid var(--primary);}
+  [contenteditable]:empty::before{content:attr(data-hint);color:#B7BCA6;}
+
+  /* ── 摘要列 ── */
+  .summary{
+    display:flex;
+    gap:16px;
+    margin-bottom:14px;
+    font-size:13px;
+    color:var(--text-light);
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:4px;}
+  .dot.d1{background:var(--warn-bg);border:1px solid var(--warn-ink);}
+  .dot.d2{background:var(--ok-bg);border:1px solid var(--ok-ink);}
+
+  /* ── 空狀態 ── */
+  #empty-hint{
+    border:1.5px dashed var(--border);
+    border-radius:10px;
+    padding:34px 16px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:14px;
+  }
+
+  /* ── 病人卡片 ── */
+  .card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:14px;
+    overflow:hidden;
+    page-break-inside:avoid;
+  }
+  .card-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:8px 14px;
+    background:var(--bg-card);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .card-head .idx{font-size:12px;color:var(--primary);font-weight:bold;min-width:22px;}
+  .card-head .name{
+    font-size:16px;
+    font-weight:bold;
+    letter-spacing:1px;
+    color:var(--text);
+    min-width:70px;
+  }
+  .card-head .mrn{
+    font-size:13px;
+    color:var(--muted);
+    font-family:Consolas,monospace;
+    min-width:76px;
+  }
+  select{
+    font-family:inherit;
+    font-size:12.5px;
+    padding:2px 6px;
+    border:1px solid var(--secondary);
+    border-radius:5px;
+    background:var(--fill);
+    color:var(--text);
+    cursor:pointer;
+    max-width:100%;
+  }
+  select:focus{outline:none;border-color:var(--primary);background:#fff;}
+  .locked-val{
+    font-size:12.5px;
+    color:var(--text);
+    background:var(--bg-card);
+    border-radius:5px;
+    padding:2px 8px;
+  }
+  .badge{
+    margin-left:auto;
+    font-size:12px;
+    padding:2px 10px;
+    border-radius:99px;
+    font-weight:bold;
+  }
+  .badge.finishing{background:var(--warn-bg);color:var(--warn-ink);}
+  .badge.ongoing{background:var(--ok-bg);color:var(--ok-ink);}
+  .del-btn{
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-size:15px;
+    cursor:pointer;
+    padding:2px 6px;
+    border-radius:5px;
+    line-height:1;
+  }
+  .del-btn:hover{color:#fff;background:var(--danger);}
+
+  .rt-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    border-bottom:1px solid var(--border);
+    text-align:center;
+  }
+  .rt-grid .k{font-size:11px;color:var(--muted);padding:6px 4px 0;}
+  .rt-grid .v{
+    font-size:15px;
+    font-weight:bold;
+    padding:2px 4px 8px;
+    font-family:Consolas,"Microsoft JhengHei",monospace;
+    color:var(--text);
+  }
+  .rt-grid .v.remain{color:var(--primary);}
+  .rt-grid input.num{
+    width:64px;
+    font:inherit;
+    font-weight:bold;
+    text-align:center;
+    border:1px solid var(--secondary);
+    border-radius:5px;
+    background:var(--fill);
+    color:var(--text);
+    padding:1px 2px;
+  }
+  .rt-grid input.num:focus{outline:none;border-color:var(--primary);background:#fff;}
+
+  .notes{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 14px;
+    padding:10px 14px 14px;
+  }
+  .notes .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px;}
+  .notes .field label::before{content:"▸ ";color:var(--primary);}
+  .notes .field div[contenteditable]{min-height:2.6em;font-size:13.5px;}
+  .notes .field .se-extra[contenteditable]{min-height:1.6em;margin-top:6px;}
+  .notes .field.wide{grid-column:1 / -1;}
+
+  /* ── 新增病人 ── */
+  .add-row{margin:4px 0 18px;text-align:center;}
+  .add-row button{
+    font-family:inherit;
+    font-size:13.5px;
+    padding:9px 26px;
+    border-radius:8px;
+    border:1.5px dashed var(--secondary);
+    background:var(--fill);
+    color:var(--primary);
+    cursor:pointer;
+    font-weight:bold;
+  }
+  .add-row button:hover{background:var(--bg-card);border-color:var(--primary);}
+
+  /* ── 頁尾 ── */
+  footer{
+    margin-top:24px;
+    padding-top:12px;
+    border-top:2px solid var(--primary);
+    display:flex;
+    justify-content:flex-end;
+    font-size:12px;
+    color:var(--text-light);
+  }
+  .sela-credit{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+  .sela-credit img{width:18px;height:18px;}
+
+  /* ── 列印 ── */
+  @media print{
+    body{padding:0;background:#fff;font-size:12px;}
+    .toolbar,.add-row,.del-btn,#empty-hint{display:none;}
+    .card{border-color:#bbb;margin-bottom:10px;}
+    [contenteditable]{background:transparent;border-bottom:1px dashed #999;}
+    .rt-grid input.num{border:none;background:transparent;}
+    select{border:none;background:transparent;appearance:none;}
+    header{margin-bottom:12px;}
+  }
+  @media (max-width:640px){
+    .meta{grid-template-columns:1fr;}
+    .notes{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header>
+    <h1>彰濱秀傳放射腫瘤科 病人交班單<span class="ver" id="appVersion">V0.3.0</span>
+      <small>RADIATION ONCOLOGY HANDOVER</small>
+    </h1>
+    <div class="toolbar">
+      <button class="ghost" onclick="window.print()">🖨 列印</button>
+      <button id="saveBtn" onclick="saveLocked()">🔒 另存已填寫版本（鎖定）</button>
+    </div>
+  </header>
+
+  <div class="meta">
+    <div class="cell"><label>交班醫師</label><div contenteditable data-hint="填寫姓名">林伯儒 醫師</div></div>
+    <div class="cell"><label>代理醫師</label><div contenteditable data-hint="填寫姓名">劉育昌 醫師</div></div>
+    <div class="cell"><label>交班期間</label><div contenteditable data-hint="115/07/__ ～ 115/07/__"></div></div>
+  </div>
+
+  <div class="summary">
+    <span>共 <b id="total">0</b> 位治療中病人</span>
+    <span><span class="dot d1"></span>剩餘 ≤ 5 次（交班期間可能完成，需確認結案）</span>
+    <span><span class="dot d2"></span>療程進行中</span>
+    <span style="color:var(--muted);">所有資料只存在您的瀏覽器與另存的檔案中，不會上傳</span>
+  </div>
+
+  <div id="empty-hint">尚無病人 — 點下方「＋ 新增病人」建立第一筆交班資料</div>
+  <div id="patients"></div>
+
+  <div class="add-row"><button onclick="addPatient()">＋ 新增病人</button></div>
+
+  <footer>
+    <div class="sela-credit">
+      <img src="favicon/sela.svg" alt="SELA">
+      <span>Made by SELA · <span id="creditVersion">V0.3.0</span></span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const VERSION = "V0.3.0";
+document.getElementById("appVersion").textContent = VERSION;
+document.getElementById("creditVersion").textContent = VERSION;
+
+const CANCER_TYPES = ["頭頸癌","鼻咽癌","口腔癌","食道癌","肺癌","乳癌","肝癌","胃癌","胰臟癌","大腸直腸癌","攝護腺癌","子宮頸癌","子宮內膜癌","卵巢癌","膀胱癌","腦瘤","淋巴癌","皮膚癌","骨轉移","腦轉移","其他"];
+const SIDE_EFFECTS = ["無明顯副作用","放射性皮膚炎 Gr.1","放射性皮膚炎 Gr.2","放射性皮膚炎 Gr.3","口腔黏膜炎 Gr.1","口腔黏膜炎 Gr.2","口腔黏膜炎 Gr.3","吞嚥疼痛／困難","噁心嘔吐","腹瀉","放射性膀胱炎","放射性直腸炎","疲倦","體重下降","骨髓抑制","其他（補充說明）"];
+
+const wrap = document.getElementById("patients");
+
+const opts = (list, ph) => `<option value="">${ph}</option>` + list.map(t=>`<option value="${t}">${t}</option>`).join("");
+
+function makeCard(){
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-head">
+      <span class="idx"></span>
+      <span class="name" contenteditable data-hint="姓名"></span>
+      <span class="mrn" contenteditable data-hint="病歷號碼"></span>
+      <select class="cancer">${opts(CANCER_TYPES,"癌別")}</select>
+      <span class="badge"></span>
+      <button class="del-btn" data-action="del" title="刪除此病人">✕</button>
+    </div>
+    <div class="rt-grid">
+      <div class="k">預定次數</div><div class="k">單次劑量 (cGy)</div><div class="k">已完成次數</div><div class="k">累計劑量 (cGy)</div><div class="k">剩餘次數</div>
+      <div class="v"><input class="num" data-role="total" type="number" min="1"></div>
+      <div class="v"><input class="num" data-role="dose" type="number" min="1"></div>
+      <div class="v"><input class="num" data-role="done" type="number" min="0"></div>
+      <div class="v" data-role="cum">—</div>
+      <div class="v remain" data-role="remain">—</div>
+    </div>
+    <div class="notes">
+      <div class="field"><label>診斷／照射部位</label><div contenteditable data-hint="例：cT3N1M0，PTV 含雙側頸部"></div></div>
+      <div class="field">
+        <label>目前副作用</label>
+        <select class="se">${opts(SIDE_EFFECTS,"選擇副作用")}</select>
+        <div class="se-extra" contenteditable data-hint="補充說明（手寫）"></div>
+      </div>
+      <div class="field"><label>注意事項</label><div contenteditable data-hint="例：體重監控中、每週抽血、影像追蹤"></div></div>
+      <div class="field wide"><label>其他備註</label><div contenteditable data-hint=""></div></div>
+    </div>`;
+  return card;
+}
+
+// 連動邏輯：total / dose / done 可編輯，remain 與 cum 為推導值
+function recalc(card){
+  const q = r => card.querySelector(`[data-role="${r}"]`);
+  const total = parseInt(q("total").value, 10);
+  const dose  = parseInt(q("dose").value, 10);
+  const done  = parseInt(q("done").value, 10);
+  const badge = card.querySelector(".badge");
+
+  q("cum").textContent = (!isNaN(dose) && !isNaN(done)) ? dose * done : "—";
+
+  if (isNaN(total) || isNaN(done)) {
+    q("remain").textContent = "—";
+    badge.textContent = "資料未完整";
+    badge.className = "badge ongoing";
+    return;
+  }
+  const remain = total - done;
+  q("remain").textContent = remain;
+  badge.textContent = remain <= 5 ? `剩 ${remain} 次・即將完成` : `剩 ${remain} 次`;
+  badge.className = "badge " + (remain <= 5 ? "finishing" : "ongoing");
+}
+
+function renumber(){
+  const cards = wrap.querySelectorAll(".card");
+  cards.forEach((c,i)=> c.querySelector(".idx").textContent = String(i+1).padStart(2,"0"));
+  document.getElementById("total").textContent = cards.length;
+  document.getElementById("empty-hint").style.display = cards.length ? "none" : "block";
+}
+
+function addPatient(){
+  const card = makeCard();
+  wrap.appendChild(card);
+  recalc(card);
+  renumber();
+  card.scrollIntoView?.({behavior:"smooth", block:"center"});
+  card.querySelector(".name").focus();
+}
+
+// 事件委派
+wrap.addEventListener("input", e => {
+  if (e.target.classList.contains("num")) recalc(e.target.closest(".card"));
+});
+wrap.addEventListener("change", e => {
+  // 所有 select 的選擇即時寫回 selected 屬性（坑 P3，序列化用）
+  if (e.target.tagName === "SELECT") {
+    [...e.target.options].forEach(o => o.toggleAttribute("selected", o.value === e.target.value));
+  }
+});
+wrap.addEventListener("click", e => {
+  if (e.target.dataset.action === "del") {
+    const card = e.target.closest(".card");
+    const name = card.querySelector(".name").textContent.trim() || "（未填姓名）";
+    if (confirm(`確定刪除病人「${name}」？此動作無法復原。`)) {
+      card.remove();
+      renumber();
+    }
+  }
+});
+
+renumber();
+
+// ── 另存鎖定版：產生「唯讀、無 script」的靜態 HTML ──
+// 做法：先把即時值寫回 attribute（坑 P2/P3）→ clone 整份文件 → 在 clone 上
+// 把所有可編輯元素轉為純文字、拔掉互動按鈕與 script，輸出自包含檔案。
+function saveLocked(){
+  // 1. 即時值 → attribute（clone 不會帶 property）
+  document.querySelectorAll("input.num").forEach(el => el.setAttribute("value", el.value));
+  document.querySelectorAll("select").forEach(sel =>
+    [...sel.options].forEach(o => o.toggleAttribute("selected", o.value === sel.value))
+  );
+
+  // 2. clone 並轉換為唯讀
+  const root = document.documentElement.cloneNode(true);
+
+  // contenteditable → 純文字
+  root.querySelectorAll("[contenteditable]").forEach(el => {
+    el.removeAttribute("contenteditable");
+    el.removeAttribute("data-hint");
+    if (!el.textContent.trim()) el.innerHTML = "&nbsp;";
+    el.style.background = "transparent";
+    el.style.borderBottom = "1px solid #E3E6DC";
+  });
+
+  // input → 純文字
+  root.querySelectorAll("input.num").forEach(el => {
+    const span = root.ownerDocument.createElement("span");
+    span.textContent = el.getAttribute("value") || "—";
+    el.replaceWith(span);
+  });
+
+  // select → 標籤文字
+  root.querySelectorAll("select").forEach(sel => {
+    const chosen = [...sel.options].find(o => o.hasAttribute("selected") && o.value);
+    const span = root.ownerDocument.createElement("span");
+    span.className = "locked-val";
+    span.textContent = chosen ? chosen.value : "—";
+    sel.replaceWith(span);
+  });
+
+  // 拔掉互動元素與 script
+  root.querySelectorAll(".add-row, .del-btn, #saveBtn, #empty-hint, script").forEach(el => el.remove());
+
+  // 標記鎖定版（標題列 + 頁籤標題）
+  const h1 = root.querySelector("header h1");
+  const tag = root.ownerDocument.createElement("span");
+  tag.className = "lock-tag";
+  tag.textContent = "🔒 鎖定版・唯讀";
+  h1.insertBefore(tag, h1.querySelector("small"));
+  root.querySelector("title").textContent += "（鎖定版）";
+
+  // favicon 為外部相對路徑，鎖定版單檔寄送時無法載入 → 移除連結避免破圖，
+  // 微標 img 改為隱藏（單檔自包含原則）
+  root.querySelectorAll('link[rel="icon"],link[rel="apple-touch-icon"],link[rel="manifest"]').forEach(el=>el.remove());
+  const credit = root.querySelector(".sela-credit img");
+  if (credit) credit.remove();
+
+  // 3. 輸出
+  const html = "<!DOCTYPE html>\n" + root.outerHTML;
+  const blob = new Blob([html], {type:"text/html;charset=utf-8"});
+  const a = document.createElement("a");
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `交班單_鎖定版_${stamp}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
